@@ -27,5 +27,15 @@ services:
         python app.py
       "
 
+  pgadmin:
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com   # Change this to your preferred email
+      PGADMIN_DEFAULT_PASSWORD: admin  # Change this to your preferred password
+    ports:
+      - "5050:80" 
+    depends_on:
+      - db
+
 volumes:
   postgres_data:
