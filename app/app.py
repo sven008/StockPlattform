@@ -19,10 +19,9 @@ with open('stocks.txt', 'r') as file:
 # Fetch stock information from the database
 df_info = pd.read_sql_table('information', engine)
 
-
 # Define layout
 app.layout = html.Div([
-    html.H1('Dashboard for my portfolio'),
+    html.H1('Dashboard for my Portfolio'),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
     html.Table([
         html.Thead(
@@ -54,10 +53,8 @@ app.layout = html.Div([
         ],
         value='5y'
     ),
-    dcc.Graph(id='stock-chart', style={'height': '60vh'}),
-    html.Div(style={'height': '20px'}),  # Add some space between the chart and the KPIs
-    html.Div(id='kpi-container')
-])
+    dcc.Graph(id='stock-chart', style={'height': '60vh'})
+], style={'backgroundColor': 'white', 'color': 'black'})
 
 @app.callback(
     Output('stock-chart', 'figure'),
@@ -132,43 +129,13 @@ def update_chart(stock, timeframe):
                 'tickmode': 'auto',
                 'nticks': 20  # Increase the number of ticks on the x-axis
             },
-            'height': 600
+            'height': 600,
+            'paper_bgcolor': 'white',
+            'plot_bgcolor': 'white',
+            'font': {'color': 'black'}
         }
     }
     return figure
-
-@app.callback(
-    Output('kpi-container', 'children'),
-    [Input('stock-dropdown', 'value')]
-)
-def update_kpis(stock):
-    df = pd.read_sql_table(f"{stock}_daily", engine)
-    df['Datetime'] = pd.to_datetime(df['Datetime'] if 'Datetime' in df.columns else df['Date'])
-    df.set_index('Datetime', inplace=True)
-
-    latest_data = df.iloc[-1]
-    current_price = latest_data['Close']
-    high_52w = df['High'].rolling(window=252, min_periods=1).max().iloc[-1]
-    low_52w = df['Low'].rolling(window=252, min_periods=1).min().iloc[-1]
-    all_time_high = df['High'].max()
-    percentage_to_ath = ((current_price - all_time_high) / all_time_high) * 100
-
-    roll_max = df['Close'].cummax()
-    drawdown = df['Close'] / roll_max - 1
-    max_drawdown = drawdown.min() * 100
-    end_date = drawdown.idxmin()
-    start_date = df.loc[:end_date, 'Close'].idxmax()
-    drawdown_period = f"{start_date.date()} to {end_date.date()}"
-
-    return [
-        html.Div(f"Last Price: ${current_price:.2f}"),
-        html.Div(f"52-Week High: ${high_52w:.2f}"),
-        html.Div(f"52-Week Low: ${low_52w:.2f}"),
-        html.Div(f"All-Time High: ${all_time_high:.2f}"),
-        html.Div(f"Percentage to ATH: {percentage_to_ath:.2f}%"),
-        html.Div(f"Maximum Drawdown: {max_drawdown:.2f}%"),
-        html.Div(f"Drawdown Period: {drawdown_period}")
-    ]
 
 if __name__ == "__main__":
     app.run_server(host='0.0.0.0', port=8050, debug=True)
