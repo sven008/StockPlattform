@@ -13,6 +13,9 @@ def fetch_and_save_stock_data():
     # Connect to PostgreSQL database
     engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
 
+    # Create an empty DataFrame to store all stock information
+    all_info = pd.DataFrame()
+
     # Fetch stock data for each ticker and save it to the database
     for stock in stocks:
         print(f"Fetching data for {stock}")
@@ -25,22 +28,28 @@ def fetch_and_save_stock_data():
         df_daily.to_sql(table_name_daily, engine, if_exists='replace', index=False)
         print(f"Daily data for {stock} saved to database")
         
-        # Fetch hourly stock data (limited to the last 700 days)
-        end_date = datetime.now()
-        start_date = end_date - timedelta(days=700)
-        df_hourly = ticker.history(start=start_date, end=end_date, interval="1h", prepost=True)
-        df_hourly.reset_index(inplace=True)
-        table_name_hourly = f"{stock.lower()}_hourly"
-        df_hourly.to_sql(table_name_hourly, engine, if_exists='replace', index=False)
-        print(f"Hourly data for {stock} saved to database")
+        # Fetch additional stock information
+        info = ticker.info
+        stock_name = info.get('shortName', None)
+        pe_ratio = info.get('trailingPE', None)
+        dividend_yield = info.get('dividendYield', None)
+        eps = info.get('trailingEps', None)
+        ps_ratio = info.get('priceToSalesTrailing12Months', None)
         
-        # Fetch minute stock data for the last 7 days (1 week)
-        start_date = end_date - timedelta(days=7)
-        df_minute = ticker.history(start=start_date, end=end_date, interval="1m", prepost=True)
-        df_minute.reset_index(inplace=True)
-        table_name_minute = f"{stock.lower()}_minute"
-        df_minute.to_sql(table_name_minute, engine, if_exists='replace', index=False)
-        print(f"Minute data for {stock} saved to database")
+        # Append the information to the all_info DataFrame
+        df_info = pd.DataFrame({
+            'Symbol': [stock],
+            'Aktienname': [stock_name],
+            'KGV': [pe_ratio],
+            'Dividendenrendite': [dividend_yield],
+            'Gewinn': [eps],
+            'KUV': [ps_ratio]
+        })
+        all_info = pd.concat([all_info, df_info], ignore_index=True)
+
+    # Save all stock information to a single table in the database
+    all_info.to_sql('information', engine, if_exists='replace', index=False)
+    print("All stock information saved to database")
 
 if __name__ == "__main__":
     fetch_and_save_stock_data()
