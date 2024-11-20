@@ -162,4 +162,4 @@ cython_debug/
 #.idea/
 
 # Ignore local files
-stocks.txt
+app/stocks.txt

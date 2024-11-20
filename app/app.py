@@ -38,8 +38,8 @@ app.layout = html.Div([
     html.H2('Detailed information on my stocks', style={'color': 'black'}),
     dcc.Dropdown(
         id='stock-dropdown',
-        options=[{'label': stock, 'value': stock.lower()} for stock in stocks],
-        value=stocks[0].lower(),
+        options=[{'label': stock.split(';')[0], 'value': stock.split(';')[0].lower()} for stock in stocks],
+        value=stocks[0].split(';')[0].lower(),
         clearable=False,
         style={'color': 'black'}
     ),

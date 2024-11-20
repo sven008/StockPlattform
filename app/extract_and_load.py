@@ -6,9 +6,8 @@ from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 
 def fetch_and_save_stock_data():
-    # Read the list of stock tickers from the file
-    with open('stocks.txt', 'r') as file:
-        stocks = file.read().splitlines()
+    # Read the list of stock tickers, number of stocks, and buy-in prices from the file
+    stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in'])
 
     # Connect to PostgreSQL database
     engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
@@ -17,7 +16,10 @@ def fetch_and_save_stock_data():
     all_info = pd.DataFrame()
 
     # Fetch stock data for each ticker and save it to the database
-    for stock in stocks:
+    for _, row in stocks_data.iterrows():
+        stock = row['symbol']
+        num_stocks = row['num_stocks']
+        buy_in = row['buy_in']
         print(f"Fetching data for {stock}")
         ticker = yf.Ticker(stock)
         
@@ -49,11 +51,14 @@ def fetch_and_save_stock_data():
         max_drawdown = round(drawdown.min() * 100, 2)
         end_date = drawdown.idxmin()
         start_date = df_daily.loc[:end_date, 'Close'].idxmax()
+    
 
         # Append the information to the all_info DataFrame
         df_info = pd.DataFrame({
             'symbol': [stock],
             'stock_name': [stock_name],
+            'num_stocks': [num_stocks],
+            'buy_in': [buy_in],
             'pe_ratio': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'dividend_yield': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
             'eps': [round(eps, 2) if eps is not None else None],
