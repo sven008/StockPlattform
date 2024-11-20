@@ -5,6 +5,7 @@ import plotly.graph_objects as go
 import pandas as pd
 from sqlalchemy import create_engine
 from datetime import datetime, timedelta
+import subprocess
 
 # Initialize Dash app
 app = dash.Dash(__name__)
@@ -17,29 +18,30 @@ with open('stocks.txt', 'r') as file:
     stocks = file.read().splitlines()
 
 # Fetch stock information from the database
-df_info = pd.read_sql_table('information', engine)
+def fetch_stock_info():
+    return pd.read_sql_table('information', engine)
+
+df_info = fetch_stock_info()
 
 # Define layout
 app.layout = html.Div([
-    html.H1('Dashboard for my Portfolio'),
+    html.H1('Dashboard for my Portfolio', style={'color': 'black'}),
+    html.Button('Refresh Data', id='refresh-button', n_clicks=0),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
     html.Table([
         html.Thead(
-            html.Tr([html.Th(col) for col in df_info.columns])
+            html.Tr([html.Th(col, style={'border': '1px solid black', 'padding': '10px'}) for col in df_info.columns])
         ),
-        html.Tbody([
-            html.Tr([
-                html.Td(df_info.iloc[i][col], style={'border': '1px solid black'}) for col in df_info.columns
-            ]) for i in range(len(df_info))
-        ])
-    ], style={'border-collapse': 'collapse', 'width': '100%'}),
+        html.Tbody(id='info-table-body')
+    ], style={'border-collapse': 'collapse', 'width': '100%', 'color': 'black'}),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
-    html.H2('Detailed information on my stocks'),
+    html.H2('Detailed information on my stocks', style={'color': 'black'}),
     dcc.Dropdown(
         id='stock-dropdown',
         options=[{'label': stock, 'value': stock.lower()} for stock in stocks],
         value=stocks[0].lower(),
-        clearable=False
+        clearable=False,
+        style={'color': 'black'}
     ),
     dcc.RadioItems(
         id='timeframe-radio',
@@ -51,10 +53,30 @@ app.layout = html.Div([
             {'label': '5 Years', 'value': '5y'},
             {'label': 'Max', 'value': 'max'}
         ],
-        value='5y'
+        value='5y',
+        style={'color': 'black'}
     ),
-    dcc.Graph(id='stock-chart', style={'height': '60vh'})
+    dcc.Graph(id='stock-chart', style={'height': '60vh'}),
+    html.Div(style={'height': '20px'})  # Add some space between the chart and the KPIs
 ], style={'backgroundColor': 'white', 'color': 'black'})
+
+@app.callback(
+    Output('info-table-body', 'children'),
+    [Input('refresh-button', 'n_clicks')]
+)
+def update_info_table(n_clicks):
+    if n_clicks > 0:
+        # Run the extract_and_load.py script
+        subprocess.run(["python", "extract_and_load.py"], check=True)
+    
+    df_info = fetch_stock_info()
+
+    rows = []
+    for i in range(len(df_info)):
+        row = [html.Td(df_info.iloc[i][col], style={'border': '1px solid black', 'padding': '10px'}) for col in df_info.columns]
+        rows.append(html.Tr(row))
+
+    return rows
 
 @app.callback(
     Output('stock-chart', 'figure'),
