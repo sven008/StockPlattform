@@ -6,7 +6,8 @@ with open('stocks.txt', 'r') as file:
 
 layout = html.Div([
     html.H1('Dashboard for my Portfolio', style={'color': 'black'}),
-    html.Button('Refresh Data', id='refresh-button', n_clicks=0),
+    html.Button('Refresh Stock-Data', id='refresh-button', n_clicks=0),
+    dcc.Link(html.Button('Go to Star-List', id='star-list-button'), href='/star-list'),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
     html.Table(id='info-table', style={'border-collapse': 'collapse', 'width': '100%', 'color': 'black'}),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
@@ -33,4 +34,12 @@ layout = html.Div([
     ),
     dcc.Graph(id='stock-chart', style={'height': '60vh'}),
     html.Div(style={'height': '20px'})  # Add some space between the chart and the KPIs
+], style={'backgroundColor': 'white', 'color': 'black'})
+
+star_list_layout = html.Div([
+    html.H1('Star-List', style={'color': 'black'}),
+    dcc.Link(html.Button('Go back to Dashboard', id='dashboard-button'), href='/'),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.H2('Watchlist Table', style={'color': 'black'}),
+    # Add your content for the Star-List page here
 ], style={'backgroundColor': 'white', 'color': 'black'})
