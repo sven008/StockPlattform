@@ -13,4 +13,4 @@ COPY . .
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Run the application
-CMD ["bash", "-c", "python extract_and_load.py && python app.py"]
+CMD ["bash", "-c", "python extract_and_load_portfolio.py && python extract_and_load_starlist.py && python app.py"]

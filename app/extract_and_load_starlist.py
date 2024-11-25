@@ -1,4 +1,4 @@
-# app/extract_and_load.py
+# app/extract_and_load_starlist.py
 
 import yfinance as yf
 import pandas as pd
@@ -6,8 +6,11 @@ from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 
 def fetch_and_save_stock_data():
-    # Read the list of stock tickers, number of stocks, buy-in prices, and stopp values from the file
-    stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in', 'stopp'])
+    # Read the list of stock tickers from the file
+    starlist_data = pd.read_csv('starlist.txt', sep=';', usecols=[0], names=['symbol'])
+
+    # Remove any rows with NaN values in the 'symbol' column
+    starlist_data = starlist_data.dropna(subset=['symbol'])
 
     # Connect to PostgreSQL database
     engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
@@ -16,11 +19,8 @@ def fetch_and_save_stock_data():
     all_info = pd.DataFrame()
 
     # Fetch stock data for each ticker and save it to the database
-    for _, row in stocks_data.iterrows():
+    for _, row in starlist_data.iterrows():
         stock = row['symbol']
-        num_stocks = row['num_stocks']
-        buy_in = row['buy_in']
-        stopp = row['stopp']
         print(f"Fetching data for {stock}")
         ticker = yf.Ticker(stock)
         
@@ -58,8 +58,6 @@ def fetch_and_save_stock_data():
         df_info = pd.DataFrame({
             'Symbol': [stock],
             'Name': [stock_name],
-            'Anzahl': [num_stocks],
-            'EK': [buy_in],
             'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
             'Gewinn': [round(eps, 2) if eps is not None else None],
@@ -69,13 +67,12 @@ def fetch_and_save_stock_data():
             'Low': [low_52w],
             'ATH': [all_time_high],
             'Abstand ATH': [percentage_to_ath],
-            'Max Drawdown': [max_drawdown],
-            'Stopp': [stopp]
+            'Max Drawdown': [max_drawdown]
         })
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
     # Save all stock information to a single table in the database
-    all_info.to_sql('information', engine, if_exists='replace', index=False)
+    all_info.to_sql('starlist_information', engine, if_exists='replace', index=False)
     print("All stock information saved to database")
 
 if __name__ == "__main__":

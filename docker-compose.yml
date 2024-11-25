@@ -23,7 +23,8 @@ services:
       - ./app:/app
     command: >
       bash -c "
-        python extract_and_load.py &&
+        python extract_and_load_portfolio.py &&
+        python extract_and_load_starlist.py &&
         python app.py
       "
 

@@ -163,3 +163,4 @@ cython_debug/
 
 # Ignore local files
 app/stocks.txt
+app/test.py

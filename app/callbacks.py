@@ -16,23 +16,18 @@ def register_callbacks(app, engine):
     def update_info_table(n_clicks):
         if n_clicks > 0:
             # Run the extract_and_load.py script
-            subprocess.run(["python", "extract_and_load.py"], check=True)
+            subprocess.run(["python", "extract_and_load_portfolio.py"], check=True)
         
         df_info = fetch_stock_info(engine)
 
-        # Transpose the DataFrame
-        df_info_transposed = df_info.T
+        # Create table header
+        header = [html.Th(col, style={'border': '1px solid black', 'padding': '10px'}) for col in df_info.columns]
 
         # Create table rows
         rows = []
-        for i in range(1, len(df_info_transposed)):
-            row = [html.Td(df_info_transposed.index[i], style={'border': '1px solid black', 'padding': '10px'})] + \
-                  [html.Td(df_info_transposed.iloc[i, j], style={'border': '1px solid black', 'padding': '10px'}) for j in range(len(df_info_transposed.columns))]
+        for i in range(len(df_info)):
+            row = [html.Td(df_info.iloc[i][col], style={'border': '1px solid black', 'padding': '10px'}) for col in df_info.columns]
             rows.append(html.Tr(row))
-
-        # Create table header
-        header = [html.Th(df_info_transposed.index[0], style={'border': '1px solid black', 'padding': '10px'})] + \
-                 [html.Th(df_info_transposed.iloc[0, j], style={'border': '1px solid black', 'padding': '10px'}) for j in range(len(df_info_transposed.columns))]
 
         return [html.Thead(html.Tr(header)), html.Tbody(rows)]
 
@@ -59,7 +54,7 @@ def register_callbacks(app, engine):
 
         if df.index.tz is not None:
             start_date = pd.Timestamp(start_date).tz_localize(df.index.tz) if start_date.tzinfo is None else start_date.tz_convert(df.index.tz)
-            end_date = pd.Timestamp(end_date).tz_localize(df.index.tz) if end_date.tzinfo is None else end_date.tz_convert(df.index.tz)
+            end_date = pd.Timestamp(end_date).tz_localize(df.index.tz) if end_date.tzinfo is None else end_date.tz.convert(df.index.tz)
 
         df_filtered = df[(df.index >= start_date) & (df.index <= end_date)]
 
