@@ -6,8 +6,8 @@ from sqlalchemy import create_engine
 from datetime import datetime, timedelta
 
 def fetch_and_save_stock_data():
-    # Read the list of stock tickers, number of stocks, and buy-in prices from the file
-    stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in'])
+    # Read the list of stock tickers, number of stocks, buy-in prices, and stopp values from the file
+    stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in', 'stopp'])
 
     # Connect to PostgreSQL database
     engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
@@ -20,6 +20,7 @@ def fetch_and_save_stock_data():
         stock = row['symbol']
         num_stocks = row['num_stocks']
         buy_in = row['buy_in']
+        stopp = row['stopp']
         print(f"Fetching data for {stock}")
         ticker = yf.Ticker(stock)
         
@@ -51,24 +52,25 @@ def fetch_and_save_stock_data():
         max_drawdown = round(drawdown.min() * 100, 2)
         end_date = drawdown.idxmin()
         start_date = df_daily.loc[:end_date, 'Close'].idxmax()
-    
+        drawdown_period = f"{pd.to_datetime(start_date).date()} to {pd.to_datetime(end_date).date()}"
 
         # Append the information to the all_info DataFrame
         df_info = pd.DataFrame({
-            'symbol': [stock],
-            'stock_name': [stock_name],
-            'num_stocks': [num_stocks],
-            'buy_in': [buy_in],
-            'pe_ratio': [round(pe_ratio, 2) if pe_ratio is not None else None],
-            'dividend_yield': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
-            'eps': [round(eps, 2) if eps is not None else None],
-            'ps_ratio': [round(ps_ratio, 2) if ps_ratio is not None else None],
-            'current_price': [current_price],
-            'high_52w': [high_52w],
-            'low_52w': [low_52w],
-            'all_time_high': [all_time_high],
-            'percentage_to_ath': [percentage_to_ath],
-            'max_drawdown': [max_drawdown]
+            'Symbol': [stock],
+            'Name': [stock_name],
+            'Anzahl': [num_stocks],
+            'EK': [buy_in],
+            'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
+            'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
+            'Gewinn': [round(eps, 2) if eps is not None else None],
+            'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
+            'Aktueller Preis': [current_price],
+            'High': [high_52w],
+            'Low': [low_52w],
+            'ATH': [all_time_high],
+            'Abstand ATH': [percentage_to_ath],
+            'Max Drawdown': [max_drawdown],
+            'Stopp': [stopp]
         })
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
