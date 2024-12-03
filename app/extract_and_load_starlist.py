@@ -50,9 +50,12 @@ def fetch_and_save_stock_data():
         roll_max = df_daily['Close'].cummax()
         drawdown = df_daily['Close'] / roll_max - 1
         max_drawdown = round(drawdown.min() * 100, 2)
-        end_date = drawdown.idxmin()
-        start_date = df_daily.loc[:end_date, 'Close'].idxmax()
-        drawdown_period = f"{pd.to_datetime(start_date).date()} to {pd.to_datetime(end_date).date()}"
+
+        # Calculate average annual performance
+        df_daily['Year'] = df_daily['Date'].dt.year
+        annual_returns = df_daily.groupby('Year')['Close'].apply(lambda x: x.iloc[-1] / x.iloc[0] - 1)
+        avg_annual_performance = round(annual_returns.mean() * 100, 2)
+
 
         # Append the information to the all_info DataFrame
         df_info = pd.DataFrame({
@@ -62,6 +65,7 @@ def fetch_and_save_stock_data():
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
             'Gewinn': [round(eps, 2) if eps is not None else None],
             'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
+            'Durchschn. % pro Jahr': [avg_annual_performance],
             'Aktueller Preis': [current_price],
             'High': [high_52w],
             'Low': [low_52w],

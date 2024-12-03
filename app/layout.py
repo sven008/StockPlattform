@@ -1,12 +1,16 @@
 from dash import dcc, html
+import pandas as pd
+import yfinance as yf
 
-# Read the list of stock tickers from the file
-with open('stocks.txt', 'r') as file:
-    stocks = file.read().splitlines()
+# Read the list of stock tickers and names from the file
+stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in', 'stopp'])
+stocks = stocks_data['symbol'].tolist()
+stock_names = stocks_data['symbol'].apply(lambda x: yf.Ticker(x).info.get('shortName', x)).tolist()
 
-# Read the list of starlist tickers from the file
-with open('starlist.txt', 'r') as file:
-    starlist_stocks = file.read().splitlines()
+# Read the list of starlist tickers and names from the file
+starlist_data = pd.read_csv('starlist.txt', sep=';', usecols=[0], names=['symbol'])
+starlist_stocks = starlist_data['symbol'].tolist()
+starlist_names = starlist_data['symbol'].apply(lambda x: yf.Ticker(x).info.get('shortName', x)).tolist()
 
 layout = html.Div([
     html.H1('Dashboard for my Portfolio', style={'color': 'black'}),
@@ -18,8 +22,8 @@ layout = html.Div([
     html.H2('Detailed information on my stocks', style={'color': 'black'}),
     dcc.Dropdown(
         id='stock-dropdown',
-        options=[{'label': stock.split(';')[0], 'value': stock.split(';')[0].lower()} for stock in stocks],
-        value=stocks[0].split(';')[0].lower(),
+        options=[{'label': f"{name} ({symbol})", 'value': symbol.lower()} for name, symbol in zip(stock_names, stocks)],
+        value=stocks[0].lower(),
         clearable=False,
         style={'color': 'black'}
     ),
@@ -49,8 +53,8 @@ star_list_layout = html.Div([
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
     dcc.Dropdown(
         id='starlist-dropdown',
-        options=[{'label': stock.split(';')[0], 'value': stock.split(';')[0].lower()} for stock in starlist_stocks],
-        value=starlist_stocks[0].split(';')[0].lower(),
+        options=[{'label': f"{name} ({symbol})", 'value': symbol.lower()} for name, symbol in zip(starlist_names, starlist_stocks)],
+        value=starlist_stocks[0].lower(),
         clearable=False,
         style={'color': 'black'}
     ),

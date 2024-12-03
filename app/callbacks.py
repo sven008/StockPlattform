@@ -19,7 +19,7 @@ def register_callbacks(app, engine):
     def update_info_table(n_clicks):
         if n_clicks > 0:
             # Run the extract_and_load.py script
-            subprocess.run(["python", "extract_and_load.py"], check=True)
+            subprocess.run(["python", "extract_and_load_portfolio.py"], check=True)
         
         df_info = fetch_stock_info(engine)
 
