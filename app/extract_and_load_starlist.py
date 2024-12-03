@@ -52,9 +52,8 @@ def fetch_and_save_stock_data():
         max_drawdown = round(drawdown.min() * 100, 2)
 
         # Calculate average annual performance
-        df_daily['Year'] = df_daily['Date'].dt.year
-        annual_returns = df_daily.groupby('Year')['Close'].apply(lambda x: x.iloc[-1] / x.iloc[0] - 1)
-        avg_annual_performance = round(annual_returns.mean() * 100, 2)
+        price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
+        avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
 
 
         # Append the information to the all_info DataFrame
