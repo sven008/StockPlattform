@@ -2,18 +2,16 @@
 
 import yfinance as yf
 import pandas as pd
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, inspect
 from datetime import datetime, timedelta
 
 def fetch_and_save_stock_data():
     # Read the list of stock tickers from the file
     starlist_data = pd.read_csv('starlist.txt', sep=';', usecols=[0], names=['symbol'])
 
-    # Remove any rows with NaN values in the 'symbol' column
-    starlist_data = starlist_data.dropna(subset=['symbol'])
-
     # Connect to PostgreSQL database
     engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
+    inspector = inspect(engine)
 
     # Create an empty DataFrame to store all stock information
     all_info = pd.DataFrame()
@@ -28,8 +26,25 @@ def fetch_and_save_stock_data():
         df_daily = ticker.history(period="10y", interval="1d", prepost=True)
         df_daily.reset_index(inplace=True)
         table_name_daily = f"{stock.lower()}_daily"
-        df_daily.to_sql(table_name_daily, engine, if_exists='replace', index=False)
-        print(f"Daily data for {stock} saved to database")
+
+        # Check if the table exists
+        if inspector.has_table(table_name_daily):
+            # Load existing data
+            df_existing = pd.read_sql_table(table_name_daily, engine)
+            # Find the last available date in the existing data
+            last_date = df_existing['Date'].max()
+            # Filter new data
+            df_new = df_daily[df_daily['Date'] > last_date]
+            if not df_new.empty:
+                # Append new data to the existing data
+                df_new.to_sql(table_name_daily, engine, if_exists='append', index=False)
+                print(f"New data for {stock} added to database")
+            else:
+                print(f"No new data for {stock}")
+        else:
+            # Save new data to the database
+            df_daily.to_sql(table_name_daily, engine, if_exists='replace', index=False)
+            print(f"Daily data for {stock} saved to database")
         
         # Fetch additional stock information
         info = ticker.info
@@ -55,7 +70,6 @@ def fetch_and_save_stock_data():
         price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
         avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
 
-
         # Append the information to the all_info DataFrame
         df_info = pd.DataFrame({
             'Symbol': [stock],
@@ -64,7 +78,7 @@ def fetch_and_save_stock_data():
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
             'Gewinn': [round(eps, 2) if eps is not None else None],
             'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
-            'Durchschn. % pro Jahr': [avg_annual_performance],
+            '⌀ % pro Jahr': [avg_annual_performance],
             'Aktueller Preis': [current_price],
             'High': [high_52w],
             'Low': [low_52w],
@@ -75,6 +89,9 @@ def fetch_and_save_stock_data():
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
     # Save all stock information to a single table in the database
+    if inspector.has_table('starlist_information'):
+        df_existing_info = pd.read_sql_table('starlist_information', engine)
+        all_info = pd.concat([df_existing_info, all_info]).drop_duplicates(subset=['Symbol'], keep='last')
     all_info.to_sql('starlist_information', engine, if_exists='replace', index=False)
     print("All stock information saved to database")
 

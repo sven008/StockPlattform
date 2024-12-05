@@ -21,6 +21,9 @@ services:
       - "8050:8050"
     volumes:
       - ./app:/app
+      - ./Backup:/home/pi/Backup
+    env_file:
+      - .env
     command: >
       bash -c "
         python extract_and_load_portfolio.py &&

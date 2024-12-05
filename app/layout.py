@@ -13,8 +13,11 @@ starlist_stocks = starlist_data['symbol'].tolist()
 starlist_names = starlist_data['symbol'].apply(lambda x: yf.Ticker(x).info.get('shortName', x)).tolist()
 
 layout = html.Div([
-    html.H1('Dashboard for my Portfolio', style={'color': 'black'}),
+    html.H1('Stock-Dashboard', style={'color': 'black'}),
     dcc.Link(html.Button('Go to Star-List', id='star-list-button'), href='/star-list'),
+    html.Button('Save database to local file', id='save-db-button', n_clicks=0),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.H2('My Portfolio', style={'color': 'black'}),
     html.Button('Refresh Stock-Data', id='refresh-button', n_clicks=0),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
     html.Table(id='info-table', style={'border-collapse': 'collapse', 'width': '100%', 'color': 'black'}),
@@ -35,6 +38,7 @@ layout = html.Div([
             {'label': '1 Year', 'value': '1y'},
             {'label': 'YTD', 'value': 'ytd'},
             {'label': '5 Years', 'value': '5y'},
+            {'label': '10 Years', 'value': '10y'},
             {'label': 'Max', 'value': 'max'}
         ],
         value='5y',
@@ -66,6 +70,7 @@ star_list_layout = html.Div([
             {'label': '1 Year', 'value': '1y'},
             {'label': 'YTD', 'value': 'ytd'},
             {'label': '5 Years', 'value': '5y'},
+            {'label': '10 Years', 'value': '10y'},
             {'label': 'Max', 'value': 'max'}
         ],
         value='5y',
