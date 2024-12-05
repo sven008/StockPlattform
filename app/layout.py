@@ -13,7 +13,7 @@ starlist_stocks = starlist_data['symbol'].tolist()
 starlist_names = starlist_data['symbol'].apply(lambda x: yf.Ticker(x).info.get('shortName', x)).tolist()
 
 layout = html.Div([
-    html.H1('Stock-Dashboard', style={'color': 'black'}),
+    html.H1('Stock-Pashboard', style={'color': 'black'}),
     dcc.Link(html.Button('Go to Star-List', id='star-list-button'), href='/star-list'),
     html.Button('Save database to local file', id='save-db-button', n_clicks=0),
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
