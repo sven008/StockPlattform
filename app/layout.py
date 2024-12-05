@@ -38,7 +38,6 @@ layout = html.Div([
             {'label': '1 Year', 'value': '1y'},
             {'label': 'YTD', 'value': 'ytd'},
             {'label': '5 Years', 'value': '5y'},
-            {'label': '10 Years', 'value': '10y'},
             {'label': 'Max', 'value': 'max'}
         ],
         value='5y',
@@ -70,7 +69,6 @@ star_list_layout = html.Div([
             {'label': '1 Year', 'value': '1y'},
             {'label': 'YTD', 'value': 'ytd'},
             {'label': '5 Years', 'value': '5y'},
-            {'label': '10 Years', 'value': '10y'},
             {'label': 'Max', 'value': 'max'}
         ],
         value='5y',
