@@ -1,11 +1,10 @@
-# app/extract_and_load_portfolio.py
-
 import yfinance as yf
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 from datetime import datetime, timedelta
 import os
 from dotenv import load_dotenv
+from kpi import calculate_kpis_portfolio
 
 # Load environment variables from .env file
 load_dotenv()
@@ -60,35 +59,19 @@ def fetch_and_save_stock_data():
         # Fetch additional stock information
         info = ticker.info
         stock_name = info.get('shortName', None)
+        pe_ratio = info.get('trailingPE', None)
         dividend_yield = info.get('dividendYield', None)
+        eps = info.get('trailingEps', None)
+        ps_ratio = info.get('priceToSalesTrailing12Months', None)
         
-        # Calculate KPIs
-        latest_data = df_daily.iloc[-1]
-        current_price = round(latest_data['Close'], 2)
-        all_time_high = round(df_daily['High'].max(), 2)
-        percentage_to_ath = round(((current_price - all_time_high) / all_time_high) * 100, 2)
-
-        # Calculate average annual performance
-        price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
-        avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
-
-    
-        # Append the information to the all_info DataFrame
-        df_info = pd.DataFrame({
-            'Symbol': [stock],
-            'Name': [stock_name],
-            'Anzahl': [num_stocks],
-            'EK': [buy_in],
-            'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
-            'Aktueller Preis': [current_price],
-            'ATH': [all_time_high],
-            'Abstand ATH': [percentage_to_ath],
-            '⌀ % pro Jahr': [avg_annual_performance],
-            'Stopp': [stopp]
-        })
+        # Calculate KPIs and append to all_info DataFrame
+        df_info = calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, stopp, pe_ratio, dividend_yield, eps, ps_ratio)
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
     # Save all stock information to a single table in the database
+    if inspector.has_table('information'):
+        df_existing_info = pd.read_sql_table('information', engine)
+        all_info = pd.concat([df_existing_info, all_info]).drop_duplicates(subset=['Symbol'], keep='last')
     all_info.to_sql('information', engine, if_exists='replace', index=False)
     print("All stock information saved to database")
 
