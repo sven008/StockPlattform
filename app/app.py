@@ -8,12 +8,20 @@ from datetime import datetime, timedelta
 import subprocess
 from layout import layout, star_list_layout
 from callbacks import register_callbacks
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the database URL from environment variables
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 # Initialize Dash app
 app = dash.Dash(__name__, suppress_callback_exceptions=True)
 
 # Connect to PostgreSQL database
-engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
+engine = create_engine(DATABASE_URL)
 
 # Set layout
 app.layout = html.Div([

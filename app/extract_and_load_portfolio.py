@@ -4,13 +4,21 @@ import yfinance as yf
 import pandas as pd
 from sqlalchemy import create_engine, inspect
 from datetime import datetime, timedelta
+import os
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
+# Get the database URL from environment variables
+DATABASE_URL = os.getenv('DATABASE_URL')
 
 def fetch_and_save_stock_data():
     # Read the list of stock tickers, number of stocks, buy-in prices, and stopp values from the file
     stocks_data = pd.read_csv('stocks.txt', sep=';', header=None, names=['symbol', 'num_stocks', 'buy_in', 'stopp'])
 
     # Connect to PostgreSQL database
-    engine = create_engine('postgresql://postgres:postgres@db:5432/stockdata')
+    engine = create_engine(DATABASE_URL)
     inspector = inspect(engine)
 
     # Create an empty DataFrame to store all stock information
