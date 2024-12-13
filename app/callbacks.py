@@ -27,8 +27,8 @@ def register_callbacks(app, engine):
     )
     def update_info_table(n_clicks):
         if n_clicks > 0:
-            # Run the extract_and_load.py script
-            subprocess.run(["python", "extract_and_load_portfolio.py"], check=True)
+            # Run the extract_and_load.py script for portfolio
+            subprocess.run(["python", "extract_and_load.py", "portfolio"], check=True)
         
         df_info = fetch_stock_info(engine)
 
@@ -45,12 +45,12 @@ def register_callbacks(app, engine):
 
     @app.callback(
         Output('starlist-table', 'children'),
-        [Input('refresh-button', 'n_clicks')]
+        [Input('refresh-starlist-button', 'n_clicks')]
     )
     def update_starlist_table(n_clicks):
         if n_clicks > 0:
-            # Run the extract_and_load_starlist.py script
-            subprocess.run(["python", "extract_and_load_starlist.py"], check=True)
+            # Run the extract_and_load.py script for starlist
+            subprocess.run(["python", "extract_and_load.py", "starlist"], check=True)
         
         df_starlist = fetch_starlist_info(engine)
 
@@ -223,7 +223,6 @@ def register_callbacks(app, engine):
                     marker=dict(color='blue', size=10),
                     name='Low'
                 ),
-            
             ],
             'layout': {
                 'title': f'{stock.upper()} Stock Prices ({timeframe})',

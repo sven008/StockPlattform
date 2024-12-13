@@ -26,8 +26,7 @@ services:
       - .env
     command: >
       bash -c "
-        python extract_and_load_portfolio.py &&
-        python extract_and_load_starlist.py &&
+        python extract_and_load.py &&
         python app.py
       "
 
