@@ -20,7 +20,7 @@ def fetch_stock_info(engine):
 def fetch_starlist_info(engine):
     return pd.read_sql_table('starlist_information', engine)
 
-def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stopp):
+def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stopp, log_scale=False):
     df = pd.read_sql_table(f"{stock}_daily", engine)
     df['Datetime'] = pd.to_datetime(df['Datetime'] if 'Datetime' in df.columns else df['Date'])
     df.set_index('Datetime', inplace=True)
@@ -97,20 +97,25 @@ def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stop
             )
         )
 
+    layout = {
+        'title': f'{stock.upper()} Stock Prices ({timeframe})',
+        'xaxis': {
+            'rangeslider': {'visible': False},
+            'tickmode': 'auto',
+            'nticks': 20  # Increase the number of ticks on the x-axis
+        },
+        'yaxis': {
+            'type': 'log' if log_scale else 'linear'
+        },
+        'height': 600,
+        'paper_bgcolor': 'white',
+        'plot_bgcolor': 'white',
+        'font': {'color': 'black'}
+    }
+
     figure = {
         'data': data,
-        'layout': {
-            'title': f'{stock.upper()} Stock Prices ({timeframe})',
-            'xaxis': {
-                'rangeslider': {'visible': False},
-                'tickmode': 'auto',
-                'nticks': 20  # Increase the number of ticks on the x-axis
-            },
-            'height': 600,
-            'paper_bgcolor': 'white',
-            'plot_bgcolor': 'white',
-            'font': {'color': 'black'}
-        }
+        'layout': layout
     }
     return figure
 
@@ -162,18 +167,20 @@ def register_callbacks(app, engine):
     @app.callback(
         Output('stock-chart', 'figure'),
         [Input('stock-dropdown', 'value'),
-         Input('timeframe-radio', 'value')]
+         Input('timeframe-radio', 'value'),
+         Input('log-scale-checkbox', 'value')]
     )
-    def update_chart(stock, timeframe):
-        return calculate_chart_data(stock, timeframe, engine, fetch_stock_info, include_stopp=True)
+    def update_chart(stock, timeframe, log_scale):
+        return calculate_chart_data(stock, timeframe, engine, fetch_stock_info, include_stopp=True, log_scale=log_scale)
 
     @app.callback(
         Output('starlist-chart', 'figure'),
         [Input('starlist-dropdown', 'value'),
-         Input('starlist-timeframe-radio', 'value')]
+         Input('starlist-timeframe-radio', 'value'),
+         Input('log-scale-checkbox', 'value')]
     )
-    def update_starlist_chart(stock, timeframe):
-        return calculate_chart_data(stock, timeframe, engine, fetch_starlist_info, include_stopp=False)
+    def update_starlist_chart(stock, timeframe, log_scale):
+        return calculate_chart_data(stock, timeframe, engine, fetch_starlist_info, include_stopp=False, log_scale=log_scale)
 
     @app.callback(
         Output('save-db-button', 'n_clicks'),

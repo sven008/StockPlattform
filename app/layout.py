@@ -43,6 +43,12 @@ layout = html.Div([
         value='5y',
         style={'color': 'black'}
     ),
+    dcc.Checklist(
+        id='log-scale-checkbox',
+        options=[{'label': 'Logarithmic Scale', 'value': 'log'}],
+        value=[],
+        style={'color': 'black'}
+    ),
     dcc.Graph(id='stock-chart', style={'height': '60vh'}),
     html.Div(style={'height': '20px'})  # Add some space between the chart and the KPIs
 ], style={'backgroundColor': 'white', 'color': 'black'})
@@ -72,6 +78,12 @@ star_list_layout = html.Div([
             {'label': 'Max', 'value': 'max'}
         ],
         value='5y',
+        style={'color': 'black'}
+    ),
+    dcc.Checklist(
+        id='log-scale-checkbox',
+        options=[{'label': 'Logarithmic Scale', 'value': 'log'}],
+        value=[],
         style={'color': 'black'}
     ),
     dcc.Graph(id='starlist-chart', style={'height': '60vh'}),
