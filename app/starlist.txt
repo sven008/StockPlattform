@@ -16,4 +16,5 @@ VA7A.F;
 526.F;
 NVE.F;
 LOTB.BR;
-FRI.F
+FRI.F;
+1YD.F
