@@ -54,7 +54,8 @@ def calculate_kpis_starlist(df_daily, stock, stock_name, pe_ratio, dividend_yiel
         low_52w = round(df_daily['Low'].rolling(window=252, min_periods=1).min().iloc[-1], 2)
         all_time_high = round(df_daily['High'].max(), 2)
         percentage_to_ath = round(((current_price - all_time_high) / all_time_high) * 100, 2)
-
+        price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
+        avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
         roll_max = df_daily['Close'].cummax()
         drawdown = df_daily['Close'] / roll_max - 1
         max_drawdown = round(drawdown.min() * 100, 2)
@@ -65,6 +66,9 @@ def calculate_kpis_starlist(df_daily, stock, stock_name, pe_ratio, dividend_yiel
             'Name': [stock_name],
             'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
+            'Gewinn': [round(eps, 2) if eps is not None else None],
+            'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
+            '⌀ % pro Jahr': [avg_annual_performance],
             'Aktueller Preis': [current_price],
             'High': [high_52w],
             'Low': [low_52w],

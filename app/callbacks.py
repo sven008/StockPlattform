@@ -7,6 +7,7 @@ from dash import html
 from sqlalchemy import create_engine, inspect
 import os
 from dotenv import load_dotenv
+from pytz import UTC
 
 # Load environment variables from .env file
 load_dotenv()
@@ -39,7 +40,7 @@ def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stop
 
     if df.index.tz is not None:
         start_date = pd.Timestamp(start_date).tz_localize(df.index.tz) if start_date.tzinfo is None else start_date.tz_convert(df.index.tz)
-        end_date = pd.Timestamp(end_date).tz_localize(df.index.tz) if end_date.tzinfo is None else end_date.tz.convert(df.index.tz)
+        end_date = pd.Timestamp(end_date).tz_localize(df.index.tz) if end_date.tzinfo is None else end_date.tz_convert(df.index.tz)
 
     df_filtered = df[(df.index >= start_date) & (df.index <= end_date)]
 
@@ -119,40 +120,31 @@ def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stop
     }
     return figure
 
-def calculate_portfolio_value(engine):
-    df_info = fetch_stock_info(engine)
-    portfolio_value = pd.DataFrame()
+def update_portfolio_chart(n_clicks, engine):
+    # Fetch the portfolio value data from the database
+    df_portfolio_value = pd.read_sql_table('portfolio_value', engine)
 
-    for _, row in df_info.iterrows():
-        stock = row['Symbol'].lower()
-        num_stocks = row['num_stocks']
-        df_daily = pd.read_sql_table(f"{stock}_daily", engine)
-        df_daily['Date'] = pd.to_datetime(df_daily['Date'])
-        df_daily.set_index('Date', inplace=True)
-        df_daily[f'{stock}_value'] = df_daily['Close'] * num_stocks
-        if portfolio_value.empty:
-            portfolio_value = df_daily[[f'{stock}_value']]
-        else:
-            portfolio_value = portfolio_value.join(df_daily[[f'{stock}_value']], how='outer')
-
-    portfolio_value['Total Value'] = portfolio_value.sum(axis=1)
-    portfolio_value.reset_index(inplace=True)
-
+    # Create the figure for portfolio value chart
     figure = {
         'data': [
             go.Scatter(
-                x=portfolio_value['Date'],
-                y=portfolio_value['Total Value'],
+                x=df_portfolio_value['Date'],
+                y=df_portfolio_value['Total Value'],
                 mode='lines',
                 name='Total Portfolio Value'
             )
         ],
         'layout': {
-            'title': 'Total Portfolio Value Over Time',
+            'title': 'Total Portfolio Value Over Time (Current Year)',
             'xaxis': {
+                'title': 'Date',
                 'rangeslider': {'visible': False},
                 'tickmode': 'auto',
-                'nticks': 20  # Increase the number of ticks on the x-axis
+                'nticks': 20
+            },
+            'yaxis': {
+                'title': 'Total Value',
+                'type': 'linear'
             },
             'height': 600,
             'paper_bgcolor': 'white',
@@ -229,34 +221,5 @@ def register_callbacks(app, engine):
         Output('portfolio-value-chart', 'figure'),
         [Input('refresh-button', 'n_clicks')]
     )
-    def update_portfolio_value_chart(n_clicks):
-        if n_clicks > 0:
-            return calculate_portfolio_value(engine)
-        return {}
-
-    @app.callback(
-        Output('save-db-button', 'n_clicks'),
-        [Input('save-db-button', 'n_clicks')]
-    )
-    def save_database_to_local_file(n_clicks):
-        if n_clicks > 0:
-            print("Save database button clicked")
-            # Ensure the backup directory exists
-            backup_dir = '/home/pi/Backup'
-            os.makedirs(backup_dir, exist_ok=True)
-            print(f"Backup directory {backup_dir} ensured")
-
-            # Connect to PostgreSQL database
-            engine = create_engine(DATABASE_URL)
-            inspector = inspect(engine)
-
-            # List of tables to backup
-            tables = inspector.get_table_names()
-
-            # Backup each table to a CSV file
-            for table in tables:
-                df = pd.read_sql_table(table, engine)
-                df.to_csv(f'{backup_dir}/{table}.csv', index=False)
-                print(f"Table {table} saved to {backup_dir}/{table}.csv")
-
-        return n_clicks
+    def refresh_portfolio_chart(n_clicks):
+        return update_portfolio_chart(n_clicks, engine)

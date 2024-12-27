@@ -1,10 +1,11 @@
 import yfinance as yf
 import pandas as pd
 from sqlalchemy import create_engine, inspect
-from datetime import datetime, timedelta
+from datetime import datetime
 import os
 from dotenv import load_dotenv
 from kpi import calculate_kpis_portfolio, calculate_kpis_starlist
+from pytz import UTC
 
 # Load environment variables from .env file
 load_dotenv()
@@ -74,6 +75,59 @@ def fetch_and_save_stock_data_portfolio():
         all_info = pd.concat([df_existing_info, all_info]).drop_duplicates(subset=['Symbol'], keep='last')
     all_info.to_sql('information', engine, if_exists='replace', index=False)
     print("All stock information saved to database")
+
+    # Create the table with Portfolio Value
+    current_year_start = datetime(datetime.now().year, 1, 1, tzinfo=UTC)
+    today = datetime.now(UTC)
+
+    portfolio_value = pd.DataFrame()
+
+    # Iterate over all_info DataFrame to calculate the portfolio value
+    for _, row in all_info.iterrows():
+        stock = row['Symbol'].lower()
+        num_stocks = row['Anzahl']
+        df_daily = pd.read_sql_table(f"{stock}_daily", engine)
+        df_daily['Date'] = pd.to_datetime(df_daily['Date'])
+        df_daily.set_index('Date', inplace=True)
+
+        # Ensure index timezone matches
+        if df_daily.index.tz is None:
+            df_daily.index = df_daily.index.tz_localize(UTC)
+        else:
+            df_daily.index = df_daily.index.tz_convert(UTC)
+
+        # Filter data for the current year
+        df_daily = df_daily[(df_daily.index >= current_year_start) & (df_daily.index <= today)]
+
+        if df_daily.empty:
+            continue
+
+        # Calculate the stock value for each date
+        df_daily['stock_value'] = df_daily['Close'] * num_stocks
+
+        # If portfolio_value is empty, initialize it with the date and stock_value
+        if portfolio_value.empty:
+            portfolio_value = df_daily[['stock_value']].rename(columns={'stock_value': 'Total Value'})
+        else:
+            # Merge instead of join, and handle column overlap
+            portfolio_value = pd.merge(
+                portfolio_value,
+                df_daily[['stock_value']].rename(columns={'stock_value': f'{stock}_Total Value'}),
+                how='outer',
+                left_index=True,
+                right_index=True
+            ).fillna(0)
+
+        # After merging, sum the 'Total Value' columns to get the total portfolio value
+        portfolio_value['Total Value'] = portfolio_value.filter(like='_Total Value').sum(axis=1)
+
+    portfolio_value.reset_index(inplace=True)
+    portfolio_value.rename(columns={'index': 'Date'}, inplace=True)
+
+    # Save only the "Date" and "Total Value" columns to the database
+    portfolio_value = portfolio_value[['Date', 'Total Value']]
+    portfolio_value.to_sql('portfolio_value', engine, if_exists='replace', index=False)
+    print("Portfolio Value table updated with total values.")
 
 def fetch_and_save_stock_data_starlist():
     # Read the list of stock tickers from the file
