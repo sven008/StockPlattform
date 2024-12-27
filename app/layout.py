@@ -16,12 +16,12 @@ layout = html.Div([
     html.H1('Stock-Dashboard', style={'color': 'black'}),
     dcc.Link(html.Button('Go to Star-List', id='star-list-button'), href='/star-list'),
     html.Button('Save database to local file', id='save-db-button', n_clicks=0),
-    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     html.H2('My Portfolio', style={'color': 'black'}),
     html.Button('Refresh Stock-Data', id='refresh-button', n_clicks=0),
-    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     html.Table(id='info-table', style={'border-collapse': 'collapse', 'width': '100%', 'color': 'black'}),
-    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     html.H2('Detailed information on my stocks', style={'color': 'black'}),
     dcc.Dropdown(
         id='stock-dropdown',
@@ -50,7 +50,9 @@ layout = html.Div([
         style={'color': 'black'}
     ),
     dcc.Graph(id='stock-chart', style={'height': '60vh'}),
-    html.Div(style={'height': '20px'})  # Add some space between the chart and the KPIs
+    html.Div(style={'height': '20px'}),  # Add some space between the chart and the KPIs
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
+    html.H2('Portfolio Chart', style={'color': 'black'})
 ], style={'backgroundColor': 'white', 'color': 'black'})
 
 star_list_layout = html.Div([

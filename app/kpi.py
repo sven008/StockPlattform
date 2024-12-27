@@ -27,8 +27,6 @@ def calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, st
             'Stopp': [stopp],
             'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
-            'Gewinn': [round(eps, 2) if eps is not None else None],
-            'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
             '⌀ % pro Jahr': [avg_annual_performance],
             'Aktueller Preis': [current_price],
             'High': [high_52w],
