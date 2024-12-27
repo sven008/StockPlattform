@@ -124,6 +124,14 @@ def update_portfolio_chart(n_clicks, engine):
     # Fetch the portfolio value data from the database
     df_portfolio_value = pd.read_sql_table('portfolio_value', engine)
 
+    # Calculate the Year-to-Date (YTD) performance
+    current_value = df_portfolio_value['Total Value'].iloc[-1]
+    ytd_value = df_portfolio_value[df_portfolio_value['Date'].dt.year == datetime.now().year]['Total Value'].iloc[0]
+    if ytd_value > 0:
+        ytd_performance = ((current_value - ytd_value) / ytd_value) * 100
+    else:
+        ytd_performance = 0  # Avoid division by zero if YTD value is zero.
+
     # Create the figure for portfolio value chart
     figure = {
         'data': [
@@ -152,7 +160,19 @@ def update_portfolio_chart(n_clicks, engine):
             'font': {'color': 'black'}
         }
     }
-    return figure
+
+    # Add YTD performance text below the graph
+    ytd_text = f"YTD Performance: {ytd_performance:.2f}%"
+    
+    # You can display the YTD performance as a separate component below the graph
+    ytd_performance_component = html.Div(
+        children=[
+            html.H4(ytd_text, style={'color': 'green', 'textAlign': 'center'})
+        ]
+    )
+
+    return figure, ytd_performance_component
+
 
 def register_callbacks(app, engine):
     @app.callback(
@@ -218,8 +238,10 @@ def register_callbacks(app, engine):
         return calculate_chart_data(stock, timeframe, engine, fetch_starlist_info, include_stopp=False, log_scale=log_scale)
 
     @app.callback(
-        Output('portfolio-value-chart', 'figure'),
+        [Output('portfolio-value-chart', 'figure'),
+         Output('portfolio-ytd-performance', 'children')],  # Added this output for YTD performance
         [Input('refresh-button', 'n_clicks')]
     )
     def refresh_portfolio_chart(n_clicks):
-        return update_portfolio_chart(n_clicks, engine)
+        figure, ytd_performance_component = update_portfolio_chart(n_clicks, engine)
+        return figure, ytd_performance_component

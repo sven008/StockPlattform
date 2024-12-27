@@ -53,7 +53,8 @@ layout = html.Div([
     html.Div(style={'height': '20px'}),  # Add some space between the chart and the KPIs
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     html.H2('Portfolio Chart', style={'color': 'black'}),
-    dcc.Graph(id='portfolio-value-chart', style={'height': '60vh'})  # New graph for portfolio value
+    dcc.Graph(id='portfolio-value-chart', style={'height': '60vh'}),
+    html.Div(id='portfolio-ytd-performance')  # New graph for portfolio value
 ], style={'backgroundColor': 'white', 'color': 'black'})
 
 star_list_layout = html.Div([
