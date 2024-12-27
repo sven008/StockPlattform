@@ -119,6 +119,49 @@ def calculate_chart_data(stock, timeframe, engine, fetch_info_func, include_stop
     }
     return figure
 
+def calculate_portfolio_value(engine):
+    df_info = fetch_stock_info(engine)
+    portfolio_value = pd.DataFrame()
+
+    for _, row in df_info.iterrows():
+        stock = row['Symbol'].lower()
+        num_stocks = row['num_stocks']
+        df_daily = pd.read_sql_table(f"{stock}_daily", engine)
+        df_daily['Date'] = pd.to_datetime(df_daily['Date'])
+        df_daily.set_index('Date', inplace=True)
+        df_daily[f'{stock}_value'] = df_daily['Close'] * num_stocks
+        if portfolio_value.empty:
+            portfolio_value = df_daily[[f'{stock}_value']]
+        else:
+            portfolio_value = portfolio_value.join(df_daily[[f'{stock}_value']], how='outer')
+
+    portfolio_value['Total Value'] = portfolio_value.sum(axis=1)
+    portfolio_value.reset_index(inplace=True)
+
+    figure = {
+        'data': [
+            go.Scatter(
+                x=portfolio_value['Date'],
+                y=portfolio_value['Total Value'],
+                mode='lines',
+                name='Total Portfolio Value'
+            )
+        ],
+        'layout': {
+            'title': 'Total Portfolio Value Over Time',
+            'xaxis': {
+                'rangeslider': {'visible': False},
+                'tickmode': 'auto',
+                'nticks': 20  # Increase the number of ticks on the x-axis
+            },
+            'height': 600,
+            'paper_bgcolor': 'white',
+            'plot_bgcolor': 'white',
+            'font': {'color': 'black'}
+        }
+    }
+    return figure
+
 def register_callbacks(app, engine):
     @app.callback(
         Output('info-table', 'children'),
@@ -181,6 +224,15 @@ def register_callbacks(app, engine):
     )
     def update_starlist_chart(stock, timeframe, log_scale):
         return calculate_chart_data(stock, timeframe, engine, fetch_starlist_info, include_stopp=False, log_scale=log_scale)
+
+    @app.callback(
+        Output('portfolio-value-chart', 'figure'),
+        [Input('refresh-button', 'n_clicks')]
+    )
+    def update_portfolio_value_chart(n_clicks):
+        if n_clicks > 0:
+            return calculate_portfolio_value(engine)
+        return {}
 
     @app.callback(
         Output('save-db-button', 'n_clicks'),

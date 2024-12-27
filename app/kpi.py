@@ -14,9 +14,12 @@ def calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, st
         drawdown = df_daily['Close'] / roll_max - 1
         max_drawdown = round(drawdown.min() * 100, 2)
 
-        # Calculate average annual performance
         price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
         avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
+
+        # Calculate the value of the stocks
+        current_value = round(num_stocks * current_price, 2)
+        current_value_str = f"{current_value} €"
 
         # Create a DataFrame with the KPIs
         df_info = pd.DataFrame({
@@ -24,6 +27,7 @@ def calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, st
             'Name': [stock_name],
             'Anzahl': [num_stocks],
             'EK': [buy_in],
+            'Aktueller Wert': [current_value_str],
             'Stopp': [stopp],
             'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
@@ -34,6 +38,7 @@ def calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, st
             'ATH': [all_time_high],
             'Abstand ATH': [percentage_to_ath],
             'Max Drawdown': [max_drawdown]
+            
         })
         return df_info
     else:
@@ -54,19 +59,12 @@ def calculate_kpis_starlist(df_daily, stock, stock_name, pe_ratio, dividend_yiel
         drawdown = df_daily['Close'] / roll_max - 1
         max_drawdown = round(drawdown.min() * 100, 2)
 
-        # Calculate average annual performance
-        price_10_years_ago = df_daily[df_daily['Date'] == df_daily['Date'].min()]['Close'].values[0]
-        avg_annual_performance = round(((current_price / price_10_years_ago) ** (1/10) - 1) * 100, 2)
-
         # Create a DataFrame with the KPIs
         df_info = pd.DataFrame({
             'Symbol': [stock],
             'Name': [stock_name],
             'KGV': [round(pe_ratio, 2) if pe_ratio is not None else None],
             'Div-Rendite': [round(dividend_yield * 100, 2) if dividend_yield is not None else None],
-            'Gewinn': [round(eps, 2) if eps is not None else None],
-            'KUV': [round(ps_ratio, 2) if ps_ratio is not None else None],
-            '⌀ % pro Jahr': [avg_annual_performance],
             'Aktueller Preis': [current_price],
             'High': [high_52w],
             'Low': [low_52w],

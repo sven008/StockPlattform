@@ -52,16 +52,17 @@ layout = html.Div([
     dcc.Graph(id='stock-chart', style={'height': '60vh'}),
     html.Div(style={'height': '20px'}),  # Add some space between the chart and the KPIs
     html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
-    html.H2('Portfolio Chart', style={'color': 'black'})
+    html.H2('Portfolio Chart', style={'color': 'black'}),
+    dcc.Graph(id='portfolio-value-chart', style={'height': '60vh'})  # New graph for portfolio value
 ], style={'backgroundColor': 'white', 'color': 'black'})
 
 star_list_layout = html.Div([
     html.H1('Star-List', style={'color': 'black'}),
     dcc.Link(html.Button('Go to Dashboard', id='dashboard-button'), href='/'),
     html.Button('Refresh Starlist-Data', id='refresh-starlist-button', n_clicks=0),
-    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     html.Table(id='starlist-table', style={'border-collapse': 'collapse', 'width': '100%', 'color': 'black'}),
-    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#F3DE8A", "opacity": "unset"}),
+    html.Hr(style={'borderWidth': "0.5vh", "width": "100%", "borderColor": "#6495ED", "opacity": "unset"}),
     dcc.Dropdown(
         id='starlist-dropdown',
         options=[{'label': f"{name} ({symbol})", 'value': symbol.lower()} for name, symbol in zip(starlist_names, starlist_stocks)],
