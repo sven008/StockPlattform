@@ -2,7 +2,6 @@ WM1.F;
 1MU.F;
 RLS.F;
 DO2.F;
-CO6.F;
 NQG.F;
 WA3.F;
 WOSB.DE;
@@ -17,4 +16,8 @@ VA7A.F;
 NVE.F;
 LOTB.BR;
 FRI.F;
-1YD.F
+1YD.F;
+BTW.F;
+1FA.F;
+SYK.F;
+CO6.F

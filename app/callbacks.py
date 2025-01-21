@@ -124,13 +124,23 @@ def update_portfolio_chart(n_clicks, engine):
     # Fetch the portfolio value data from the database
     df_portfolio_value = pd.read_sql_table('portfolio_value', engine)
 
-    # Calculate the Year-to-Date (YTD) performance
+    # Get the current year
+    current_year = datetime.now().year
+
+    # Filter for entries from the current year
+    current_year_data = df_portfolio_value[df_portfolio_value['Date'].dt.year == current_year]
+
+    # Find the first non-null 'Total Value' entry for the current year
+    ytd_value = current_year_data.loc[current_year_data['Total Value'].first_valid_index(), 'Total Value'] if not current_year_data.empty else None
+
+    # Get the current value (last entry)
     current_value = df_portfolio_value['Total Value'].iloc[-1]
-    ytd_value = df_portfolio_value[df_portfolio_value['Date'].dt.year == datetime.now().year]['Total Value'].iloc[0]
-    if ytd_value > 0:
+
+    # Calculate the Year-to-Date (YTD) performance
+    if ytd_value is not None and ytd_value > 0:
         ytd_performance = ((current_value - ytd_value) / ytd_value) * 100
     else:
-        ytd_performance = 0  # Avoid division by zero if YTD value is zero.
+        ytd_performance = 0  # Avoid division by zero or if no valid YTD value.
 
     # Create the figure for portfolio value chart
     figure = {
@@ -164,7 +174,7 @@ def update_portfolio_chart(n_clicks, engine):
     # Add YTD performance text below the graph
     ytd_text = f"YTD Performance: {ytd_performance:.2f}%"
     
-    # You can display the YTD performance as a separate component below the graph
+    # Display the YTD performance as a separate component below the graph
     ytd_performance_component = html.Div(
         children=[
             html.H4(ytd_text, style={'color': 'green', 'textAlign': 'center'})
@@ -172,7 +182,6 @@ def update_portfolio_chart(n_clicks, engine):
     )
 
     return figure, ytd_performance_component
-
 
 def register_callbacks(app, engine):
     @app.callback(
