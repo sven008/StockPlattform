@@ -66,6 +66,7 @@ def fetch_and_save_stock_data_portfolio():
         ps_ratio = info.get('priceToSalesTrailing12Months', None)
         
         # Calculate KPIs and append to all_info DataFrame
+        df_daily = pd.read_sql_table(f"{stock.lower()}_daily", engine)
         df_info = calculate_kpis_portfolio(df_daily, stock, stock_name, num_stocks, buy_in, stopp, pe_ratio, dividend_yield, eps, ps_ratio)
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
@@ -179,6 +180,7 @@ def fetch_and_save_stock_data_starlist():
         ps_ratio = info.get('priceToSalesTrailing12Months', None)
         
         # Calculate KPIs and append to all_info DataFrame
+        df_daily = pd.read_sql_table(f"{stock.lower()}_daily", engine)
         df_info = calculate_kpis_starlist(df_daily, stock, stock_name, pe_ratio, dividend_yield, eps, ps_ratio)
         all_info = pd.concat([all_info, df_info], ignore_index=True)
 
